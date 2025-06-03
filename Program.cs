@@ -1,5 +1,7 @@
 ﻿using System;
 
+namespace ProjetoBiblioteca;
+
 class Program
 {
     static Biblioteca biblioteca = new Biblioteca();
