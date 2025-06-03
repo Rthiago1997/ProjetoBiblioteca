@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+namespace ProjetoBiblioteca{
+
+
 #region Livro.cs
 public class Livro
 {
@@ -12,7 +15,7 @@ public class Livro
     private int quantidade;
     public int Quantidade
     {
-        get { return quantidade; }
+        get => quantidade;
         set
         {
             if (value < 0)
@@ -99,7 +102,7 @@ public class Emprestimo
 
     public override string ToString()
     {
-        string status = Ativo ? "Em aberto" : $"Devolvido em {Periodo.DataDevolucao.Value}";
+        string status = Ativo ? "Em aberto" : $"Devolvido em {Periodo.DataDevolucao.Value.ToShortDateString()}";
         return $"{Livro.Titulo} emprestado para {Usuario.Nome} em {Periodo.DataEmprestimo.ToShortDateString()} - {status}";
     }
 }
@@ -112,13 +115,24 @@ public class Biblioteca
     public List<Usuario> Usuarios { get; } = new();
     public List<Emprestimo> Emprestimos { get; } = new();
 
-    public void CadastrarLivro(Livro livro) => Livros.Add(livro);
-    public void CadastrarUsuario(Usuario usuario) => Usuarios.Add(usuario);
+    public void CadastrarLivro(Livro livro)
+    {
+        if (Livros.Any(l => l.ISBN.Equals(livro.ISBN, StringComparison.OrdinalIgnoreCase)))
+            throw new ArgumentException("Livro com este ISBN já cadastrado.");
+        Livros.Add(livro);
+    }
+
+    public void CadastrarUsuario(Usuario usuario)
+    {
+        if (Usuarios.Any(u => u.Matricula.Equals(usuario.Matricula, StringComparison.OrdinalIgnoreCase)))
+            throw new ArgumentException("Usuário com esta matrícula já cadastrado.");
+        Usuarios.Add(usuario);
+    }
 
     public bool RegistrarEmprestimo(string isbn, string matricula)
     {
-        var livro = Livros.FirstOrDefault(l => l.ISBN == isbn);
-        var usuario = Usuarios.FirstOrDefault(u => u.Matricula == matricula);
+        var livro = Livros.FirstOrDefault(l => l.ISBN.Equals(isbn, StringComparison.OrdinalIgnoreCase));
+        var usuario = Usuarios.FirstOrDefault(u => u.Matricula.Equals(matricula, StringComparison.OrdinalIgnoreCase));
 
         if (livro == null || usuario == null || livro.Quantidade <= 0)
             return false;
@@ -131,7 +145,9 @@ public class Biblioteca
     public bool RegistrarDevolucao(string isbn, string matricula)
     {
         var emprestimo = Emprestimos.FirstOrDefault(e =>
-            e.Livro.ISBN == isbn && e.Usuario.Matricula == matricula && e.Ativo);
+            e.Livro.ISBN.Equals(isbn, StringComparison.OrdinalIgnoreCase) &&
+            e.Usuario.Matricula.Equals(matricula, StringComparison.OrdinalIgnoreCase) &&
+            e.Ativo);
 
         if (emprestimo == null)
             return false;
@@ -195,7 +211,11 @@ class Program
         Console.Write("ISBN: ");
         string isbn = Console.ReadLine();
         Console.Write("Quantidade: ");
-        int.TryParse(Console.ReadLine(), out int qtd);
+        if (!int.TryParse(Console.ReadLine(), out int qtd) || qtd < 0)
+        {
+            Console.WriteLine("Quantidade inválida.");
+            return;
+        }
 
         try
         {
@@ -216,9 +236,16 @@ class Program
         Console.Write("Matrícula: ");
         string matricula = Console.ReadLine();
 
-        var usuario = new Usuario(nome, matricula);
-        biblioteca.CadastrarUsuario(usuario);
-        Console.WriteLine("Usuário cadastrado com sucesso.");
+        try
+        {
+            var usuario = new Usuario(nome, matricula);
+            biblioteca.CadastrarUsuario(usuario);
+            Console.WriteLine("Usuário cadastrado com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao cadastrar usuário: {ex.Message}");
+        }
     }
 
     static void RegistrarEmprestimo()
@@ -229,9 +256,9 @@ class Program
         string matricula = Console.ReadLine();
 
         if (biblioteca.RegistrarEmprestimo(isbn, matricula))
-            Console.WriteLine("Empréstimo registrado.");
+            Console.WriteLine("Empréstimo registrado com sucesso.");
         else
-            Console.WriteLine("Erro: Livro não disponível ou dados incorretos.");
+            Console.WriteLine("Erro: Livro indisponível ou dados incorretos.");
     }
 
     static void RegistrarDevolucao()
@@ -242,7 +269,7 @@ class Program
         string matricula = Console.ReadLine();
 
         if (biblioteca.RegistrarDevolucao(isbn, matricula))
-            Console.WriteLine("Devolução registrada.");
+            Console.WriteLine("Devolução registrada com sucesso.");
         else
             Console.WriteLine("Erro: Empréstimo não encontrado.");
     }
@@ -272,3 +299,4 @@ class Program
     }
 }
 #endregion
+}
