@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+namespace ProjetoBiblioteca{
+
+
 // Programa principal
 class Program
 {
@@ -355,4 +358,5 @@ public class Biblioteca
         
         RegistrarDevolucao(isbn, matricula);
     }
+}
 }
