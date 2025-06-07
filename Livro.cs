@@ -1,16 +1,24 @@
 using System;
 
+namespace BibliotecaApp
+{
+
 public class Livro
 {
     public string Titulo { get; set; }
     public string Autor { get; set; }
     public string ISBN { get; set; }
-    private int quantidadeDisponivel;
+    private int quantidade;
 
-    public int QuantidadeDisponivel
+    public int Quantidade
     {
-        get => quantidadeDisponivel;
-        set => quantidadeDisponivel = value >= 0 ? value : 0;
+        get => quantidade;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentException("Quantidade não pode ser negativa.");
+            quantidade = value;
+        }
     }
 
     public Livro(string titulo, string autor, string isbn, int quantidade)
@@ -18,11 +26,10 @@ public class Livro
         Titulo = titulo;
         Autor = autor;
         ISBN = isbn;
-        QuantidadeDisponivel = quantidade;
+        Quantidade = quantidade;
     }
 
-    public override string ToString()
-    {
-        return $"{Titulo} - {Autor} (ISBN: {ISBN}) | Disponíveis: {QuantidadeDisponivel}";
-    }
+    public bool Disponivel() => Quantidade > 0;
+}
+
 }
