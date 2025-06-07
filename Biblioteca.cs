@@ -2,87 +2,46 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+namespace BibliotecaApp
+{
+    
 public class Biblioteca
 {
-    public List<Livro> Livros = new();
-    public List<Usuario> Usuarios = new();
-    public List<Emprestimo> Emprestimos = new();
+    public List<Livro> Livros { get; set; } = new List<Livro>();
+    public List<Usuario> Usuarios { get; set; } = new List<Usuario>();
+    public List<Emprestimo> Emprestimos { get; set; } = new List<Emprestimo>();
 
-    public void CadastrarLivro(string titulo, string autor, string isbn, int quantidade)
-    {
-        Livros.Add(new Livro(titulo, autor, isbn, quantidade));
-    }
+    public void CadastrarLivro(Livro livro) => Livros.Add(livro);
+    public void CadastrarUsuario(Usuario usuario) => Usuarios.Add(usuario);
 
-    public void CadastrarUsuario(string nome, string matricula)
+    public bool RegistrarEmprestimo(string isbn, string matricula)
     {
-        Usuarios.Add(new Usuario(nome, matricula));
-    }
-
-    public void RegistrarEmprestimo(string isbn, string matricula)
-    {
-        var livro = Livros.FirstOrDefault(l => l.ISBN == isbn);
+        var livro = Livros.FirstOrDefault(l => l.ISBN == isbn && l.Disponivel());
         var usuario = Usuarios.FirstOrDefault(u => u.Matricula == matricula);
 
-        if (livro == null || usuario == null)
+        if (livro != null && usuario != null)
         {
-            Console.WriteLine("Livro ou usuário não encontrado.");
-            return;
+            livro.Quantidade--;
+            Emprestimos.Add(new Emprestimo(livro, usuario, new PeriodoEmprestimo(DateTime.Now)));
+            return true;
         }
-
-        if (livro.QuantidadeDisponivel <= 0)
-        {
-            Console.WriteLine("Livro indisponível para empréstimo.");
-            return;
-        }
-
-        livro.QuantidadeDisponivel--;
-        Emprestimos.Add(new Emprestimo(livro, usuario));
-        Console.WriteLine("Empréstimo registrado com sucesso.");
+        return false;
     }
 
-    public void RegistrarDevolucao(string isbn, string matricula)
+    public bool RegistrarDevolucao(string isbn, string matricula)
     {
-        var emprestimo = Emprestimos.FirstOrDefault(e =>
-            e.LivroEmprestado.ISBN == isbn &&
-            e.Usuario.Matricula == matricula &&
-            e.Ativo);
-
+        var emprestimo = Emprestimos.FirstOrDefault(e => e.LivroEmprestado.ISBN == isbn && e.UsuarioEmprestimo.Matricula == matricula && !e.Finalizado);
         if (emprestimo != null)
         {
-            emprestimo.RegistrarDevolucao();
-            Console.WriteLine("Devolução registrada.");
+            emprestimo.Finalizar();
+            return true;
         }
-        else
-        {
-            Console.WriteLine("Empréstimo não encontrado.");
-        }
+        return false;
     }
 
-    public void ListarLivros()
-    {
-        foreach (var livro in Livros)
-        {
-            Console.WriteLine(livro);
-        }
-    }
+    public List<Livro> LivrosDisponiveis() => Livros.Where(l => l.Disponivel()).ToList();
+    public List<Emprestimo> LivrosEmprestados() => Emprestimos.Where(e => !e.Finalizado).ToList();
+    public List<Usuario> UsuariosComLivros() => Emprestimos.Where(e => !e.Finalizado).Select(e => e.UsuarioEmprestimo).Distinct().ToList();
+}
 
-    public void ExibirRelatorios()
-    {
-        Console.WriteLine("\n--- Livros Disponíveis ---");
-        foreach (var l in Livros.Where(l => l.QuantidadeDisponivel > 0))
-            Console.WriteLine(l);
-
-        Console.WriteLine("\n--- Livros Emprestados ---");
-        foreach (var e in Emprestimos.Where(e => e.Ativo))
-            Console.WriteLine(e);
-
-        Console.WriteLine("\n--- Usuários com Livros Emprestados ---");
-        var usuariosComLivros = Emprestimos
-            .Where(e => e.Ativo)
-            .Select(e => e.Usuario)
-            .Distinct();
-
-        foreach (var u in usuariosComLivros)
-            Console.WriteLine(u);
-    }
 }
