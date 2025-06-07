@@ -1,12 +1,5 @@
-public class Pessoa
+namespace BibliotecaApp
 {
-    public string Nome { get; set; }
-
-    public Pessoa(string nome)
-    {
-        Nome = nome;
-    }
-}
 
 public class Usuario : Pessoa
 {
@@ -16,9 +9,6 @@ public class Usuario : Pessoa
     {
         Matricula = matricula;
     }
-
-    public override string ToString()
-    {
-        return $"{Nome} (Matrícula: {Matricula})";
-    }
 }
+}
+
