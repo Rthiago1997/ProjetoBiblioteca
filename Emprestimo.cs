@@ -1,35 +1,26 @@
 using System;
 
-public struct PeriodoEmprestimo
+namespace BibliotecaApp
 {
-    public DateTime DataEmprestimo;
-    public DateTime? DataDevolucao;
-}
 
 public class Emprestimo
 {
     public Livro LivroEmprestado { get; set; }
-    public Usuario Usuario { get; set; }
+    public Usuario UsuarioEmprestimo { get; set; }
     public PeriodoEmprestimo Periodo { get; set; }
+    public bool Finalizado { get; set; } = false;
 
-    public bool Ativo => Periodo.DataDevolucao == null;
-
-    public Emprestimo(Livro livro, Usuario usuario)
+    public Emprestimo(Livro livro, Usuario usuario, PeriodoEmprestimo periodo)
     {
         LivroEmprestado = livro;
-        Usuario = usuario;
-        Periodo = new PeriodoEmprestimo { DataEmprestimo = DateTime.Now, DataDevolucao = null };
+        UsuarioEmprestimo = usuario;
+        Periodo = periodo;
     }
 
-    public void RegistrarDevolucao()
+    public void Finalizar()
     {
-        Periodo.DataDevolucao = DateTime.Now;
-        LivroEmprestado.QuantidadeDisponivel++;
+        Finalizado = true;
+        LivroEmprestado.Quantidade++;
     }
-
-    public override string ToString()
-    {
-        string status = Ativo ? "EM ABERTO" : $"DEVOLVIDO EM {Periodo.DataDevolucao.Value.ToShortDateString()}";
-        return $"Livro: {LivroEmprestado.Titulo} | Usuário: {Usuario.Nome} | Empréstimo: {Periodo.DataEmprestimo.ToShortDateString()} | {status}";
-    }
+}
 }
